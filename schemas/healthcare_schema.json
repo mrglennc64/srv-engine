@@ -1,0 +1,29 @@
+{
+  "domain": "healthcare",
+  "description": "Healthcare claim/encounter row. Stub schema — extend with real ICD/CPT/NPI rules.",
+  "required": ["patient_id", "encounter_date", "provider_npi"],
+  "fields": {
+    "provider_npi": {
+      "pattern": "^\\d{10}$",
+      "severity": "HIGH",
+      "pattern_message": "NPI must be exactly 10 digits"
+    },
+    "icd10_code": {
+      "pattern": "^[A-Z]\\d{2}(\\.\\w{1,4})?$",
+      "severity": "HIGH",
+      "pattern_message": "ICD-10 code expected (e.g. E11.9, J45.909)"
+    },
+    "cpt_code": {
+      "pattern": "^\\d{5}$",
+      "severity": "MEDIUM",
+      "pattern_message": "CPT must be 5 digits"
+    },
+    "encounter_date": {
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+      "severity": "MEDIUM",
+      "pattern_message": "encounter_date must be YYYY-MM-DD"
+    }
+  },
+  "identifiers": ["patient_id", "provider_npi"],
+  "revenue_critical_fields": ["cpt_code", "icd10_code"]
+}
