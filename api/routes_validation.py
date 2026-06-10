@@ -52,5 +52,5 @@ async def worksheet_endpoint(
     return {
         "domain": domain,
         "issue_count": len(issues),
-        "worksheet": ws.to_dict(orient="records"),
+        "worksheet": ws.fillna("").to_dict(orient="records"),
     }

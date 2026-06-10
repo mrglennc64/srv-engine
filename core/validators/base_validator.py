@@ -33,7 +33,7 @@ class BaseValidator:
                 continue
             pattern = spec.get("pattern")
             if pattern:
-                mask = df[field].notna() & ~df[field].astype(str).str.match(pattern)
+                mask = df[field].notna() & ~df[field].astype(str).str.replace(r"\.0$", "", regex=True).str.match(pattern)
                 for idx in df[mask].index:
                     issues.append({
                         "row": int(idx),
