@@ -54,7 +54,7 @@ _STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 @app.get("/", include_in_schema=False)
 def root():
-    return RedirectResponse(url="/dashboard")
+    return FileResponse(_STATIC_DIR / "landing.html", media_type="text/html")
 
 
 @app.get("/health")

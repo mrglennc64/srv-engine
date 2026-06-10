@@ -6,15 +6,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
   :root {
-    --bg: #020617;
-    --card: #0f172a;
-    --border: #1e293b;
-    --accent: #e5e7eb;
-    --muted: #94a3b8;
-    --green: #22c55e;
-    --yellow: #eab308;
-    --red: #ef4444;
-    --blue: #3b82f6;
+    --bg: #f4f9f9;
+    --card: #ffffff;
+    --border: #e0e9eb;
+    --accent: #16242a;
+    --muted: #6b7b80;
+    --green: #15936b;
+    --yellow: #c9781f;
+    --red: #d64541;
+    --blue: #0b8c77;
+    --teal: #0fb89c;
     --font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   }
@@ -45,6 +46,7 @@
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 16px;
+    box-shadow: 0 1px 3px rgba(16,40,46,.04);
   }
   .card h2 {
     font-size: 13px;
@@ -78,28 +80,28 @@
     font-size: 10px;
     font-family: var(--mono);
   }
-  .badge.ok { background: rgba(34, 197, 94, 0.15); color: var(--green); }
-  .badge.bad { background: rgba(239, 68, 68, 0.15); color: var(--red); }
-  .badge.warn { background: rgba(234, 179, 8, 0.15); color: var(--yellow); }
-  .badge.info { background: rgba(59, 130, 246, 0.15); color: var(--blue); }
+  .badge.ok { background: rgba(21, 147, 107, 0.12); color: var(--green); }
+  .badge.bad { background: rgba(214, 69, 65, 0.12); color: var(--red); }
+  .badge.warn { background: rgba(201, 120, 31, 0.12); color: var(--yellow); }
+  .badge.info { background: rgba(11, 140, 119, 0.12); color: var(--blue); }
   .btn {
     font-size: 12px;
     padding: 6px 12px;
     border-radius: 6px;
     border: 1px solid var(--border);
-    background: #0f172a;
+    background: #ffffff;
     color: var(--accent);
     cursor: pointer;
     font-family: var(--font);
   }
-  .btn:hover { background: #1e293b; }
+  .btn:hover { background: #eef5f4; }
   .btn.primary { background: var(--blue); border-color: var(--blue); color: white; }
-  .btn.primary:hover { background: #2563eb; }
+  .btn.primary:hover { background: #0b6f5e; }
   .btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .form-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
   .form-row label { font-size: 12px; color: var(--muted); min-width: 60px; }
   input[type="file"], select, input[type="text"] {
-    background: #020617;
+    background: #ffffff;
     border: 1px solid var(--border);
     color: var(--accent);
     padding: 6px 8px;
@@ -118,11 +120,11 @@
     background: transparent;
     border: 1px solid transparent;
   }
-  .tab.active { background: #1e293b; color: var(--accent); border-color: var(--border); }
+  .tab.active { background: #eef5f4; color: var(--accent); border-color: var(--border); }
   .tab-panel { display: none; }
   .tab-panel.active { display: block; }
   pre.output {
-    background: #020617;
+    background: #f6fafa;
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 10px;
@@ -145,7 +147,10 @@
 <body>
 
 <header>
-  <h1>Engine Dashboard</h1>
+  <h1 style="display:flex;align-items:center;gap:10px">
+    <span style="width:26px;height:26px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#7fe6d3,var(--teal) 55%,#0b6f5e);box-shadow:0 2px 6px rgba(15,184,156,.3)"></span>
+    Engine Dashboard
+  </h1>
   <div class="meta">
     <span id="auto-refresh-status">auto-refresh: on (5s)</span>
     &nbsp;·&nbsp;
