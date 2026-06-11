@@ -1,0 +1,7 @@
+account,amount,voucher_series,voucher_date,description,vat_code
+1930,-1250.00,A,2026-01-15,Bankbetalning,NONE
+193,1250.00,A,2026-01-15,Kundfaktura 1041,SE25
+3001,"12,50",A,2026-01-16,Försäljning tjänst,SE25
+2641,-312.50,a1,2026-01-16,Ingående moms,SE25
+1510,4000.00,V,15/01/2026,Kundfordran,NONE
+6212,-890.00,V,2026-01-17,Telefoni,SE-25

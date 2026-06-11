@@ -119,7 +119,7 @@ def _audit_sections(run_id: str, st: dict) -> list:
     audit = panel([
         Paragraph("AUDIT TRAIL", st["section"]),
         Spacer(1, 4),
-        Paragraph(f"Run ID: {run_id} · Generated: {now_iso()} · NgineAgent validation/correction pipeline", st["small"]),
+        Paragraph(f"Session (Run ID): {run_id} · Generated: {now_iso()} · NgineAgent validation/correction pipeline", st["small"]),
         Paragraph("Findings derived from structured, repeatable checks. Operator review pending.", st["fine"]),
     ])
     return [how, Spacer(1, 10), audit]
@@ -157,9 +157,9 @@ def export_pdf(df: pd.DataFrame, title: str = "Corrected Data Export", domain: s
         f"{low} low · generated {now_utc()}"
     )
     story.append(hero_block(
-        f"{domain_label} · corrected dataset", "blue",
+        f"{domain_label} · corrected dataset · the master", "blue",
         title,
-        [sub, f"Run ID: {run_id}"],
+        [sub, f"Session (Run ID): {run_id}"],
         ScoreRing(score, status, scheme),
         st,
     ))
@@ -256,7 +256,7 @@ def export_pdf(df: pd.DataFrame, title: str = "Corrected Data Export", domain: s
         rows.append(cells)
 
     story.append(section(
-        "Corrected records", st,
+        "Corrected records — the master", st,
         table_block(list(zip(df.columns, weights)), rows, st),
     ))
     story.append(Spacer(1, 16))
@@ -289,12 +289,12 @@ def export_validation_pdf(df: pd.DataFrame, domain: str, issues) -> bytes:
 
     # hero
     story.append(hero_block(
-        f"{domain_label} · validation scan", "blue",
+        f"{domain_label} · validation scan · console pass", "blue",
         "Validation Report",
         [
             f"{n_rows} rows analyzed · {len(real)} issues · {high} blocking · "
             f"{med + low} resolvable · generated {now_utc()}",
-            f"Run ID: {run_id}",
+            f"Session (Run ID): {run_id}",
         ],
         ScoreRing(score, status, scheme),
         st,

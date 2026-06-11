@@ -49,3 +49,6 @@ Thumbs.db
 *.pem
 *.key
 .env.local
+
+# Demo artifacts (generated)
+demo/out/

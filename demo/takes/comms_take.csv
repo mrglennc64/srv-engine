@@ -1,0 +1,7 @@
+run_id,url,channel,severity,label,score
+run-001,https://example.com,seo,warn,Missing meta description,60
+run-001,ftp://bad-url-demo.com,audit,warn,Unreachable surface,55
+run-001,https://example.com/contact,telephony,warn,IVR dead-end node,50
+run-001,https://example.com/pricing,funnel,critical,No CTA on landing surface,45
+run-001,https://example.com,seo,ok,Title tag present,142
+run-001,https://example.com/about,audit,ok,,90

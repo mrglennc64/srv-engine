@@ -1,0 +1,7 @@
+protocol_id,notering_id,section,condition,inspection_date,validated_by_user,photo_count
+PROT-88,N-01,Tak,normalt,2026-04-02,true,3
+PROT-88,N-02,Fasad,bad,2026-04-02,true,2
+PROT-88,N-03,,under_normalt,2026-04-02,false,4
+PROT-88,N-04,Grund,normalt,02.04.2026,true,1
+PROT-88,N-05,Våtrum,over_normalt,2026-04-02,yes,5
+PROT-88,N-06,Vind,normalt,2026-04-02,false,-2
