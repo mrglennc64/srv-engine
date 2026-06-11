@@ -1,10 +1,11 @@
 import time
 from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.responses import FileResponse, RedirectResponse
 
 from core.utils.stats import stats
+from core.exporters.pitch_pdf import build_pitch_pdf
 
 from .routes_validation import router as validation_router
 from .routes_correction import router as correction_router
@@ -70,3 +71,12 @@ def get_stats():
 @app.get("/dashboard", include_in_schema=False)
 def dashboard():
     return FileResponse(_STATIC_DIR / "dashboard.html", media_type="text/html")
+
+
+@app.get("/pitch.pdf", include_in_schema=False)
+def pitch_pdf():
+    return Response(
+        content=build_pitch_pdf(),
+        media_type="application/pdf",
+        headers={"Content-Disposition": "inline; filename=ngineagent-engine-reference.pdf"},
+    )

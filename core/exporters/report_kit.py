@@ -351,23 +351,27 @@ class Pill(Flowable):
 
 # ── Composite builders ────────────────────────────────────────────────────────
 
-def hero_block(chip_text, chip_scheme, title, sub_lines, ring: ScoreRing, st: dict) -> Table:
-    """Rounded hero panel: status chip, H1, subtitle lines, score ring at right."""
+def hero_block(chip_text, chip_scheme, title, sub_lines, ring: ScoreRing | None, st: dict) -> Table:
+    """Rounded hero panel: status chip, H1, subtitle lines, optional score ring at right."""
     left = [Pill(chip_text, chip_scheme, font_size=7, pad_x=8, pad_y=3), Spacer(1, 7), Paragraph(title, st["h1"])]
     for line in sub_lines:
         left.append(Paragraph(line, st["sub"]))
-    ring_w = ring.size + 16
-    t = Table([[left, ring]], colWidths=[CONTENT_W - ring_w - 40, ring_w])
+    if ring is not None:
+        ring_w = ring.size + 16
+        t = Table([[left, ring]], colWidths=[CONTENT_W - ring_w - 40, ring_w])
+        align = [("ALIGN", (1, 0), (1, 0), "RIGHT"), ("RIGHTPADDING", (1, 0), (1, 0), 18)]
+    else:
+        t = Table([[left]], colWidths=[CONTENT_W])
+        align = [("RIGHTPADDING", (0, 0), (0, 0), 18)]
     t.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, -1), HERO_BG),
         ("BOX", (0, 0), (-1, -1), 0.8, GRIDC),
         ("ROUNDEDCORNERS", [10, 10, 10, 10]),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-        ("ALIGN", (1, 0), (1, 0), "RIGHT"),
         ("LEFTPADDING", (0, 0), (0, 0), 18),
-        ("RIGHTPADDING", (1, 0), (1, 0), 18),
         ("TOPPADDING", (0, 0), (-1, -1), 14),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 14),
+        *align,
     ]))
     return t
 

@@ -54,6 +54,14 @@ def test_export_validation_pdf():
     assert data[:5] == b"%PDF-"
 
 
+def test_pitch_pdf_builds():
+    from core.exporters.pitch_pdf import build_pitch_pdf
+
+    data = build_pitch_pdf()
+    assert data[:5] == b"%PDF-"
+    assert len(data) > 2000
+
+
 def test_ddex_generate_and_validate_round_trip():
     data = {
         "id": "REL001",
