@@ -451,7 +451,7 @@ function renderMeters(body) {
     by[f][k]++; by[f].t++;
   });
   const score = Math.max(0, Math.min(100, 100 - 6 * H - (M + L)));
-  const status = (score >= 90 && H === 0) ? "HEALTHY" : score >= 70 ? "NEEDS WORK" : "CRITICAL";
+  const status = (score >= 90 && H === 0) ? "HEALTHY" : score >= 70 ? "ACTION REQUIRED" : "CRITICAL";
   const color = (score >= 90 && H === 0) ? "var(--green)" : score >= 70 ? "var(--yellow)" : "var(--red)";
   const maxT = Math.max(1, ...Object.values(by).map(g => g.t));
   const strips = Object.entries(by).sort((a, b) => b[1].t - a[1].t).map(([f, g]) => {

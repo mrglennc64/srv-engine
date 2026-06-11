@@ -19,6 +19,9 @@ import uuid
 import pandas as pd
 from reportlab.platypus import Paragraph, Spacer
 
+from ..utils.schema_loader import load_schema
+from ..utils.rule_loader import load_rules
+
 from .report_kit import (
     AMBER,
     RED,
@@ -80,12 +83,23 @@ def _status_for(score: int, blocking: int = 0) -> tuple[str, str]:
     if score >= 90 and blocking == 0:
         return "HEALTHY", "green"
     if score >= 70:
-        return "NEEDS WORK", "amber"
+        return "ACTION REQUIRED", "amber"
     return "CRITICAL", "red"
 
 
 def _run_id() -> str:
     return uuid.uuid4().hex[:12]
+
+
+def _preset_stamp(domain: str | None) -> str:
+    """'music preset · schema v2026.06.1 · rules v2026.06.1' — for deterministic replay."""
+    name = (domain or "base").strip()
+    schema_v = load_schema(name).get("version", "unversioned")
+    rules = load_rules(name)
+    parts = [f"{name} preset", f"schema v{schema_v}"]
+    if rules:
+        parts.append(f"rules v{rules.get('version', 'unversioned')}")
+    return " · ".join(parts)
 
 
 def _cell_text(value) -> str:
@@ -104,33 +118,45 @@ def _severity_sections(high: int, med: int, low: int, ok: int, st: dict) -> list
     return [section("Severity distribution", st, bar, Spacer(1, 5), legend), Spacer(1, 14)]
 
 
-def _audit_sections(run_id: str, st: dict) -> list:
+def _audit_sections(run_id: str, st: dict, preset: str | None = None) -> list:
     how = panel([
         Paragraph("HOW TO READ THIS", st["section"]),
         Spacer(1, 4),
         Paragraph(
             "Each finding carries a severity (Critical / Watch / Low) and a fix priority "
             "(P1 / P2 / P3). P1 items are blocking and should be remediated within 48 hours; "
-            "P2 items within the next 7-day cycle; P3 items are tracked. Re-run the scan after "
-            "remediation to confirm score lift and resolved-finding count.",
+            "P2 items within the next 7-day cycle; P3 items are tracked. Fix notes on P1 items "
+            "are prescriptive; P2 fix notes describe a safe, automatable transformation. Re-run "
+            "the scan after remediation to confirm score lift and resolved-finding count.",
             st["small"],
         ),
     ])
-    audit = panel([
+    audit_lines = [
         Paragraph("AUDIT TRAIL", st["section"]),
         Spacer(1, 4),
         Paragraph(f"Session (Run ID): {run_id} · Generated: {now_iso()} · NgineAgent validation/correction pipeline", st["small"]),
-        Paragraph("Findings derived from structured, repeatable checks. Operator review pending.", st["fine"]),
-    ])
-    return [how, Spacer(1, 10), audit]
+    ]
+    if preset:
+        audit_lines.append(Paragraph(
+            f"Produced by: {preset}. Same take + same preset version reproduces this result exactly.",
+            st["small"],
+        ))
+    audit_lines.append(Paragraph("Findings derived from structured, repeatable checks. Operator review pending.", st["fine"]))
+    return [how, Spacer(1, 10), panel(audit_lines)]
 
 
 # ── Corrected-data export ─────────────────────────────────────────────────────
 
-def export_pdf(df: pd.DataFrame, title: str = "Corrected Data Export", domain: str | None = None) -> bytes:
+def export_pdf(
+    df: pd.DataFrame,
+    title: str = "Corrected Data Export",
+    domain: str | None = None,
+    baseline_score: int | None = None,
+) -> bytes:
     st = kit_styles()
     run_id = _run_id()
     domain_label = (domain or "dataset").strip()
+    preset = _preset_stamp(domain)
     n_rows, n_cols = len(df), len(df.columns)
 
     sev_col = _find_col(df, "severity", "status", "result", "condition")
@@ -149,6 +175,12 @@ def export_pdf(df: pd.DataFrame, title: str = "Corrected Data Export", domain: s
     score = _score(high, med, low)
     status, scheme = _status_for(score, high)
 
+    # corrections actually applied (non-empty correction column)
+    corr_col = _find_col(df, "correction", "corrected", "new_value")
+    corrections_applied = 0
+    if corr_col is not None:
+        corrections_applied = int((df[corr_col].fillna("").astype(str).str.strip() != "").sum())
+
     story = []
 
     # hero
@@ -159,7 +191,7 @@ def export_pdf(df: pd.DataFrame, title: str = "Corrected Data Export", domain: s
     story.append(hero_block(
         f"{domain_label} · corrected dataset · the master", "blue",
         title,
-        [sub, f"Session (Run ID): {run_id}"],
+        [sub, f"Session (Run ID): {run_id} · {preset}"],
         ScoreRing(score, status, scheme),
         st,
     ))
@@ -178,18 +210,27 @@ def export_pdf(df: pd.DataFrame, title: str = "Corrected Data Export", domain: s
         )
     else:
         impact = "All corrections applied cleanly — dataset is release-ready."
-    story.append(section(
-        "Data quality score", st,
-        GaugeBar(score),
-        Spacer(1, 6),
-        Paragraph(impact, st["small"]),
-    ))
+    gauge_lines = [GaugeBar(score), Spacer(1, 6)]
+    if baseline_score is not None and baseline_score != score:
+        delta = score - baseline_score
+        gauge_lines.append(Paragraph(
+            f"Before correction: <b>{int(baseline_score)}</b> → after: <b>{score}</b> "
+            f"(<b>{'+' if delta >= 0 else ''}{delta}</b> points this session).",
+            st["small"],
+        ))
+    gauge_lines.append(Paragraph(impact, st["small"]))
+    story.append(section("Data quality score", st, *gauge_lines))
     story.append(Spacer(1, 14))
 
     # stat cards
+    second_card = (
+        ("Corrections", corrections_applied, "values fixed this session", "green" if corrections_applied else None)
+        if corr_col is not None
+        else ("Columns", n_cols, "fields per row", None)
+    )
     story.append(stat_cards([
         ("Rows", n_rows, "corrected records", None),
-        ("Columns", n_cols, "fields per row", None),
+        second_card,
         ("Critical", high, "fix within 48 hours", "red" if high else "green"),
         ("Watch", med + low, "fix within 7 days", "amber" if (med + low) else "green"),
     ], st))
@@ -258,10 +299,29 @@ def export_pdf(df: pd.DataFrame, title: str = "Corrected Data Export", domain: s
     story.append(section(
         "Corrected records — the master", st,
         table_block(list(zip(df.columns, weights)), rows, st),
+        Spacer(1, 5),
+        Paragraph(
+            "Severity key: HIGH = Critical (P1 · fix within 48h) · MEDIUM = Watch (P2 · 7 days) "
+            "· LOW = Track (P3).",
+            st["fine"],
+        ),
     ))
     story.append(Spacer(1, 16))
 
-    story.extend(_audit_sections(run_id, st))
+    # operator next steps
+    if high or med or low:
+        story.append(section(
+            "Next steps (operator)", st,
+            panel([
+                Paragraph("1. Fill the <b>correction</b> column for the remaining P1 rows — the fix notes above are prescriptive.", st["small"]),
+                Paragraph("2. Apply the fixes: <b>POST /correction/apply</b> with the original take + this worksheet.", st["small"]),
+                Paragraph("3. Re-validate (<b>POST /validation/validate</b>) to confirm the findings cleared and the score lifted.", st["small"]),
+                Paragraph("4. Re-export the master (<b>POST /export/file</b>) for the release-ready artifact.", st["small"]),
+            ]),
+        ))
+        story.append(Spacer(1, 16))
+
+    story.extend(_audit_sections(run_id, st, preset))
 
     subtitle = f"{domain_label} · corrected dataset · {now_utc()}"
     return build_document(title, subtitle, story)
@@ -273,6 +333,7 @@ def export_validation_pdf(df: pd.DataFrame, domain: str, issues) -> bytes:
     st = kit_styles()
     run_id = _run_id()
     domain_label = (domain or "dataset").strip()
+    preset = _preset_stamp(domain)
     n_rows = len(df)
 
     real = [i for i in issues if i.get("severity") != "INFO" and i.get("field") != "__health__"]
@@ -294,7 +355,7 @@ def export_validation_pdf(df: pd.DataFrame, domain: str, issues) -> bytes:
         [
             f"{n_rows} rows analyzed · {len(real)} issues · {high} blocking · "
             f"{med + low} resolvable · generated {now_utc()}",
-            f"Session (Run ID): {run_id}",
+            f"Session (Run ID): {run_id} · {preset}",
         ],
         ScoreRing(score, status, scheme),
         st,
@@ -410,7 +471,7 @@ def export_validation_pdf(df: pd.DataFrame, domain: str, issues) -> bytes:
     ))
     story.append(Spacer(1, 16))
 
-    story.extend(_audit_sections(run_id, st))
+    story.extend(_audit_sections(run_id, st, preset))
 
     subtitle = f"{domain_label} · validation scan · {now_utc()}"
     return build_document("Validation Report", subtitle, story)

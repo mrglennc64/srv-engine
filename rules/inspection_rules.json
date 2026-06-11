@@ -1,5 +1,6 @@
 {
   "domain": "inspection",
+  "version": "2026.06.1",
   "description": "Building-inspection domain rules — condition weighting + AI-finding validation gates. Modeled on the besiktning app (besiktningsprotokoll). Consumed alongside inspection_schema.json.",
   "penalties": {
     "missing_condition": 30,

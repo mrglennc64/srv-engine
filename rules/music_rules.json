@@ -1,5 +1,6 @@
 {
   "domain": "music",
+  "version": "2026.06.1",
   "description": "Music-domain validation rules used by MusicValidator alongside the schema.",
   "penalties": {
     "missing_iswc": 35,

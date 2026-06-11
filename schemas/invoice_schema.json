@@ -1,7 +1,13 @@
 {
   "domain": "invoice",
+  "version": "2026.06.1",
   "description": "Invoice / line-item row. Stub schema — extend per accounting system.",
-  "required": ["invoice_number", "issue_date", "amount", "vendor_id"],
+  "required": [
+    "invoice_number",
+    "issue_date",
+    "amount",
+    "vendor_id"
+  ],
   "fields": {
     "invoice_number": {
       "severity": "HIGH"
@@ -30,6 +36,13 @@
       "severity": "LOW"
     }
   },
-  "identifiers": ["invoice_number", "vendor_id"],
-  "revenue_critical_fields": ["amount", "currency", "due_date"]
+  "identifiers": [
+    "invoice_number",
+    "vendor_id"
+  ],
+  "revenue_critical_fields": [
+    "amount",
+    "currency",
+    "due_date"
+  ]
 }

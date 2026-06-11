@@ -1,5 +1,6 @@
 {
   "domain": "comms",
+  "version": "2026.06.1",
   "description": "CIP (Communications Intelligence Platform) scan-finding row — modeled on the CIP app's Run/Job/Finding/Channel types. One row = one channel finding from a comms-surface scan (web, email, social, IVR). Structural + format validation; scan execution + scoring live in the CIP application layer.",
   "required": [
     "run_id",
@@ -15,7 +16,8 @@
     "url": {
       "pattern": "^https?://[^\\s]+$",
       "severity": "HIGH",
-      "pattern_message": "url must start with http:// or https://"
+      "pattern_message": "url must start with http:// or https://",
+      "fix": "Serve the surface over https:// (or http://) - other schemes are not scannable."
     },
     "hostname": {
       "severity": "LOW"
@@ -26,27 +28,32 @@
     "plan": {
       "pattern": "^(Starter|Standard|Professional)$",
       "severity": "LOW",
-      "pattern_message": "plan must be Starter, Standard, or Professional"
+      "pattern_message": "plan must be Starter, Standard, or Professional",
+      "fix": "Use one of: Starter, Standard, Professional."
     },
     "channel": {
       "pattern": "^(audit|seo|funnel|email|deliverability|social|browser|inventory|ivr)$",
       "severity": "HIGH",
-      "pattern_message": "channel must be one of: audit, seo, funnel, email, deliverability, social, browser, inventory, ivr"
+      "pattern_message": "channel must be one of: audit, seo, funnel, email, deliverability, social, browser, inventory, ivr",
+      "fix": "Map to the closest CIP channel: audit, seo, funnel, email, deliverability, social, browser, inventory, ivr (e.g. telephony -> ivr)."
     },
     "severity": {
       "pattern": "^(ok|warn|issue)$",
       "severity": "HIGH",
-      "pattern_message": "finding severity must be ok, warn, or issue"
+      "pattern_message": "finding severity must be ok, warn, or issue",
+      "fix": "Map to the CIP scale: ok, warn or issue (e.g. critical -> issue)."
     },
     "status": {
       "pattern": "^(pending|running|done|failed)$",
       "severity": "LOW",
-      "pattern_message": "job status must be pending, running, done, or failed"
+      "pattern_message": "job status must be pending, running, done, or failed",
+      "fix": "Use one of: pending, running, done, failed."
     },
     "score": {
       "pattern": "^(100|[1-9]?[0-9])$",
       "severity": "MEDIUM",
-      "pattern_message": "score must be an integer 0-100"
+      "pattern_message": "score must be an integer 0-100",
+      "fix": "Clamp to an integer 0-100."
     },
     "label": {
       "severity": "MEDIUM"

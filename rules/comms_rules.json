@@ -1,5 +1,6 @@
 {
   "domain": "comms",
+  "version": "2026.06.1",
   "description": "CIP comms-intelligence domain rules — channel weighting + finding-severity penalties. Modeled on the CIP app's 9-channel scan model; consumed alongside comms_schema.json.",
   "penalties": {
     "issue": 25,
@@ -16,7 +17,7 @@
     "email": 0.14,
     "seo": 0.12,
     "funnel": 0.12,
-    "browser": 0.10,
+    "browser": 0.1,
     "ivr": 0.08,
     "social": 0.06,
     "inventory": 0.04

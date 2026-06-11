@@ -1,5 +1,6 @@
 {
   "domain": "accounting",
+  "version": "2026.06.1",
   "description": "Accounting/bookkeeping domain rules — BAS account-class map + VAT + double-entry guidance. Modeled on the PerfectBook (bookie) SIE/BAS app. Consumed alongside accounting_schema.json.",
   "penalties": {
     "invalid_account": 30,

@@ -312,17 +312,43 @@ def build_pitch_pdf() -> bytes:
     ))
     story.append(Spacer(1, 16))
 
+    # severity model — how findings are assigned, scored, and gate acceptance
+    sev_rows = [
+        [Pill("HIGH · P1", "red"), "Required value missing, or a HIGH-severity format rule fails",
+         "−6 points each", "Blocks acceptance; grade capped at ACTION REQUIRED"],
+        [Pill("MEDIUM · P2", "amber"), "A MEDIUM-severity format or domain rule fails",
+         "−1 point each", "Fix within the 7-day cycle"],
+        [Pill("LOW · P3", "blue"), "Low-impact or cosmetic rule fails",
+         "−1 point each", "Tracked; does not gate"],
+    ]
+    story.append(section(
+        "Severity model — assignment, scoring, acceptance", st,
+        table_block(
+            [("Severity", 1.0), ("Assigned when", 2.4), ("Score impact", 1.1), ("Acceptance effect", 2.2)],
+            sev_rows, st, font_size=8,
+        ),
+        Spacer(1, 5),
+        Paragraph(
+            "Score = max(0, 100 − 6·critical − 1·other). Severities come from the preset "
+            "schema per field — never heuristics — so the same data always grades the same.",
+            st["small"],
+        ),
+    ))
+    story.append(Spacer(1, 16))
+
     # execution / mental model
     story.append(_model_panels(st))
     story.append(Spacer(1, 16))
 
     # performance envelope (measured, not estimated)
     story.append(section(
-        "Performance envelope (measured)", st,
+        "Performance envelope & deployment footprint (measured)", st,
         panel([
             Paragraph("• Validate a 1,000-row catalog: <b>~60 ms</b>. A 100-row take: <b>~7 ms</b>.", st["small"]),
             Paragraph("• Bounce a 100-row branded PDF master: <b>&lt;100 ms</b>; CSV / XLSX faster still.", st["small"]),
-            Paragraph("• Measured on a single VPS-class core. Runs share nothing, so throughput scales linearly with worker processes — no coordination layer to add.", st["small"]),
+            Paragraph("• Production service footprint: <b>~70 MB RSS</b> (measured live), cold start under 2 s, one CPU core per request.", st["small"]),
+            Paragraph("• Scaling path: <b>single worker → N uvicorn workers → N hosts</b>, partitioned by Run ID. Runs share nothing, so there is no state to migrate and no coordination layer to add.", st["small"]),
+            Paragraph("• Dependencies: 8 pinned, pure-Python packages (FastAPI, uvicorn, pandas, openpyxl, reportlab, pydantic, numpy, python-multipart). Deploys as one systemd unit behind nginx; containerizes trivially.", st["small"]),
         ]),
     ))
     story.append(Spacer(1, 16))
@@ -335,6 +361,18 @@ def build_pitch_pdf() -> bytes:
             Paragraph("<b>2. Add a rule pack (optional).</b> Domain-specific checks beyond format — same JSON convention (rules/&lt;domain&gt;_rules.json).", st["small"]),
             Paragraph("<b>3. Done.</b> The preset appears across the API, dashboard and every report — zero engine-code changes. The pytest suite covers the validate → correct → export round trip.", st["small"]),
             Paragraph("<b>Rule-set isolation:</b> presets are self-contained JSON. Adding or editing one cannot change the behavior of any other domain — integration risk stays local.", st["small"]),
+        ]),
+    ))
+    story.append(Spacer(1, 16))
+
+    # versioning + governance
+    story.append(section(
+        "Preset versioning & ruleset governance", st,
+        panel([
+            Paragraph("<b>Versioning.</b> Every schema and rule pack carries a <b>version</b> field (year.month.rev, e.g. 2026.06.1) and lives in git. Additive changes bump the revision; breaking changes bump year.month. Every report stamps the preset + schema + rules versions it ran with, so historical artifacts stay reproducible against their exact ruleset.", st["small"]),
+            Paragraph("<b>Adding a rule.</b> A rule change is a pull request: the JSON edit + a seeded demo take that exercises it + the pytest round trip (validate → correct → export). Nothing ships untested.", st["small"]),
+            Paragraph("<b>Deploying.</b> Rules deploy as files with a service restart; rollback is a git revert. No migrations, no downtime windows.", st["small"]),
+            Paragraph("<b>Deprecating.</b> Retired presets stay in git history; artifacts produced under them remain verifiable forever.", st["small"]),
         ]),
     ))
     story.append(Spacer(1, 16))
@@ -353,13 +391,60 @@ def build_pitch_pdf() -> bytes:
     ))
     story.append(Spacer(1, 16))
 
-    # security posture
+    # architecture overview — literal, component by component
+    arch_rows = [
+        ["API layer", Paragraph("api/ — FastAPI", mono_s), "4 endpoints, multipart in, JSON / file out; telemetry middleware on every request"],
+        ["Services", Paragraph("services/", mono_s), "validate · generate_worksheet · apply_corrections · export — thin orchestration over core"],
+        ["Validators", Paragraph("core/validators/", mono_s), "schema-driven required + format checks; domain validators add vertical logic (e.g. royalty gaps)"],
+        ["Correctors", Paragraph("core/correctors/", mono_s), "merge reviewed worksheet corrections onto the take; original never modified in place"],
+        ["Exporters", Paragraph("core/exporters/", mono_s), "csv / xlsx / branded PDF on a shared report kit (pure reportlab)"],
+        ["Presets", Paragraph("schemas/ + rules/", mono_s), "versioned JSON, one pair per domain; loaded per request, isolated per domain"],
+        ["Runtime", Paragraph("systemd + nginx", mono_s), "one uvicorn unit behind TLS (Let's Encrypt); console behind basic auth"],
+    ]
     story.append(section(
-        "Security posture", st,
+        "Architecture overview (literal)", st,
+        table_block(
+            [("Component", 1.0), ("Where", 1.3), ("Responsibility", 3.4)],
+            arch_rows, st, font_size=8,
+        ),
+    ))
+    story.append(Spacer(1, 16))
+
+    # security & compliance posture
+    story.append(section(
+        "Security & compliance posture", st,
         panel([
             Paragraph("• <b>No external calls</b> during validation, correction or export — the chain runs entirely in-process.", st["small"]),
-            Paragraph("• <b>No customer data retained.</b> Uploads are processed in memory per request; artifacts are returned to the caller, not stored. Telemetry keeps in-memory counters only.", st["small"]),
-            Paragraph("• <b>Minimal surface.</b> No browser, no GPU, no queue, no database — pure Python behind plain HTTPS.", st["small"]),
+            Paragraph("• <b>No customer data retained.</b> Uploads are processed in memory per request; artifacts are returned to the caller, not stored. Telemetry keeps in-memory counters only — no payloads.", st["small"]),
+            Paragraph("• <b>Data residency by construction.</b> The engine runs entirely on your infrastructure; nothing leaves the host. GDPR-friendly: no PII storage means no retention schedule to manage.", st["small"]),
+            Paragraph("• <b>Transport & access.</b> TLS via nginx + Let's Encrypt; the console and API sit behind HTTP basic auth; the marketing surface is the only public path.", st["small"]),
+            Paragraph("• <b>Auditability.</b> Run ID + preset/schema/rules versions on every artifact — any result can be traced to the exact code and rules that produced it.", st["small"]),
+            Paragraph("• <b>Supply chain.</b> 8 pinned, widely-audited pure-Python dependencies; no browser, no GPU, no queue, no database.", st["small"]),
+        ]),
+    ))
+    story.append(Spacer(1, 16))
+
+    # why this is hard to build
+    story.append(section(
+        "Why this is hard to build", st,
+        panel([
+            Paragraph("• <b>The artifact chain is the product.</b> Validation is easy; a deterministic, procurement-grade evidence chain (report → worksheet → corrected master, all version-stamped and replayable) is what compliance teams actually accept — and what takes the engineering discipline.", st["small"]),
+            Paragraph("• <b>The rule packs are distilled domain knowledge.</b> Five presets encode the working vocabulary of five live vertical products: ISRC/ISWC/IPI and §507(b) statute logic (music), CARC/RARC/NPI/CPT (healthcare claims), CIP channel findings (comms), SIE/BAS double-entry conventions (Swedish accounting), besiktningsprotokoll condition scales (inspection). That's operator knowledge, not just code.", st["small"]),
+            Paragraph("• <b>Print-grade branded PDFs without a browser.</b> The report kit renders score rings, gauges and finding cards in pure reportlab — no headless Chrome fleet to babysit, which is what makes per-request rendering on a 70 MB service possible.", st["small"]),
+            Paragraph("• <b>Determinism is a constraint, not a feature flag.</b> No model calls, no clocks in the logic, no hidden state — kept honest across every preset by the test suite.", st["small"]),
+        ]),
+    ))
+    story.append(Spacer(1, 16))
+
+    # integration plan
+    story.append(section(
+        "Integration plan (30–60 days)", st,
+        panel([
+            Paragraph("<b>Days 1–7 — Deploy & smoke.</b> Stand up the unit (VPS or container), run the bundled demo kit: all five presets through the full chain in one command, artifacts compared against known-good output.", st["small"]),
+            Paragraph("<b>Days 8–21 — Map your data.</b> Point your catalog exports at an existing preset, or author your own schema + rule pack (JSON only). Pilot on real files; tune severities with your compliance owner.", st["small"]),
+            Paragraph("<b>Days 22–45 — Wire the pipeline.</b> Integrate the four endpoints into your intake flow; stand up the operator worksheet loop for corrections that need human review.", st["small"]),
+            Paragraph("<b>Days 46–60 — Gate & monitor.</b> Make the score an acceptance gate in your procurement/release workflow; schedule re-scans; watch the dashboard telemetry.", st["small"]),
+            Paragraph("Typical effort: one engineer, part-time. There is no data migration — the engine is stateless by design.", st["small"]),
         ]),
     ))
     story.append(Spacer(1, 16))

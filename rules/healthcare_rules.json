@@ -1,5 +1,6 @@
 {
   "domain": "healthcare",
+  "version": "2026.06.1",
   "description": "Healthcare/denials domain rules — denial-recovery weighting + timely-filing thresholds. Modeled on the Denials RCM app; consumed alongside healthcare_schema.json.",
   "penalties": {
     "missing_denial_code": 35,

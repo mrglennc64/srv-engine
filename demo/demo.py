@@ -105,8 +105,10 @@ def run_domain(domain: str) -> dict:
     corrected = apply_corrections(take, ws, domain=domain)
     corrected.to_csv(out / "03-corrected.csv", index=False)
 
-    # 4. bounce — the master
-    (out / "04-master.pdf").write_bytes(export_corrected(corrected, fmt="pdf", domain=domain))
+    # 4. bounce — the master, with the before-score so the delta shows
+    (out / "04-master.pdf").write_bytes(
+        export_corrected(corrected, fmt="pdf", domain=domain, baseline_score=_score(issues))
+    )
 
     after_issues = validate_file(corrected, domain=domain)
     return {

@@ -1,27 +1,36 @@
 {
   "domain": "music",
+  "version": "2026.06.1",
   "description": "Music catalog row. Required identifiers and metadata for royalty validation.",
-  "required": ["title", "artist", "isrc"],
+  "required": [
+    "title",
+    "artist",
+    "isrc"
+  ],
   "fields": {
     "isrc": {
       "pattern": "^[A-Z]{2}[A-Z0-9]{3}\\d{7}$",
       "severity": "HIGH",
-      "pattern_message": "ISRC must be 12 chars: 2-letter country + 3 alphanumeric + 7 digits (e.g. USRC12345678)"
+      "pattern_message": "ISRC must be 12 chars: 2-letter country + 3 alphanumeric + 7 digits (e.g. USRC12345678)",
+      "fix": "Use a 12-char ISRC, e.g. USRC12345678 (2-letter country + 3-char registrant + 7 digits)."
     },
     "iswc": {
       "pattern": "^T-?\\d{3}\\.?\\d{3}\\.?\\d{3}-?\\d$",
       "severity": "MEDIUM",
-      "pattern_message": "ISWC must follow T-XXX.XXX.XXX-C format"
+      "pattern_message": "ISWC must follow T-XXX.XXX.XXX-C format",
+      "fix": "Format as T-XXX.XXX.XXX-C, e.g. T-123.456.789-0."
     },
     "ipi": {
       "pattern": "^\\d{9,11}$",
       "severity": "MEDIUM",
-      "pattern_message": "IPI must be 9-11 digits"
+      "pattern_message": "IPI must be 9-11 digits",
+      "fix": "Use the 9-11 digit IPI from your PRO."
     },
     "isni": {
       "pattern": "^\\d{15}[\\dX]$",
       "severity": "LOW",
-      "pattern_message": "ISNI must be 16 chars (15 digits + checksum)"
+      "pattern_message": "ISNI must be 16 chars (15 digits + checksum)",
+      "fix": "Use the 16-char ISNI (15 digits + checksum)."
     },
     "duration_seconds": {
       "severity": "LOW"
@@ -29,9 +38,19 @@
     "release_date": {
       "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
       "severity": "LOW",
-      "pattern_message": "release_date must be YYYY-MM-DD"
+      "pattern_message": "release_date must be YYYY-MM-DD",
+      "fix": "Use YYYY-MM-DD (e.g. 2026-05-01) - replace '/' or '.' with '-'."
     }
   },
-  "identifiers": ["isrc", "iswc", "ipi", "isni"],
-  "revenue_critical_fields": ["isrc", "iswc", "ipi"]
+  "identifiers": [
+    "isrc",
+    "iswc",
+    "ipi",
+    "isni"
+  ],
+  "revenue_critical_fields": [
+    "isrc",
+    "iswc",
+    "ipi"
+  ]
 }
