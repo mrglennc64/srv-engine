@@ -1,10 +1,11 @@
 import io
 
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Request
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Request, Response
 import pandas as pd
 
 from services.validate import validate_file
 from services.generate_worksheet import generate_worksheet
+from core.exporters.pdf_exporter import export_validation_pdf
 
 
 router = APIRouter()
@@ -36,6 +37,25 @@ async def validate_endpoint(
         "issue_count": len(issues),
         "issues": issues,
     }
+
+
+@router.post("/report")
+async def report_endpoint(
+    request: Request,
+    file: UploadFile = File(...),
+    domain: str = Form("music"),
+):
+    """Branded, multi-section validation report as a print-ready PDF."""
+    request.state.domain = domain
+    content = await file.read()
+    df = _read_upload(file, content)
+    issues = validate_file(df, domain=domain)
+    pdf = export_validation_pdf(df, domain, issues)
+    return Response(
+        content=pdf,
+        media_type="application/pdf",
+        headers={"Content-Disposition": "attachment; filename=validation-report.pdf"},
+    )
 
 
 @router.post("/worksheet")

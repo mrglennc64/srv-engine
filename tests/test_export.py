@@ -22,6 +22,38 @@ def test_export_xlsx_starts_with_zip_magic():
     assert data[:2] == b"PK"  # XLSX is a ZIP archive
 
 
+def test_export_pdf_branded_report():
+    df = pd.DataFrame([
+        {"row": 9, "field": "url", "original": "ftp://bad-url-demo.com", "correction": "",
+         "severity": "HIGH", "priority": 25, "message": "URGENT: url must start with http:// or https://",
+         "fix": "", "notes": ""},
+        {"row": 10, "field": "channel", "original": "telephony", "correction": "",
+         "severity": "MEDIUM", "priority": 10, "message": "channel must be one of: audit, seo, funnel",
+         "fix": "Use 'audit'", "notes": ""},
+    ])
+    data = export_corrected(df, fmt="pdf", domain="comms")
+    assert data[:5] == b"%PDF-"
+    assert len(data) > 2000  # multi-section report, not a bare table
+
+
+def test_export_pdf_handles_empty_and_plain_frames():
+    assert export_corrected(pd.DataFrame(columns=["a", "b"]), fmt="pdf")[:5] == b"%PDF-"
+    assert export_corrected(pd.DataFrame([{"a": 1, "b": "x"}]), fmt="pdf")[:5] == b"%PDF-"
+
+
+def test_export_validation_pdf():
+    from core.exporters.pdf_exporter import export_validation_pdf
+
+    df = pd.DataFrame([{"title": "Song", "isrc": ""}, {"title": "", "isrc": "USRC12345678"}])
+    issues = [
+        {"row": 0, "field": "isrc", "severity": "HIGH", "message": "ISRC is missing.", "fix": "Add the ISRC."},
+        {"row": 1, "field": "title", "severity": "MEDIUM", "message": "Title is empty."},
+        {"row": None, "field": "__health__", "severity": "INFO", "message": "health row"},
+    ]
+    data = export_validation_pdf(df, "music", issues)
+    assert data[:5] == b"%PDF-"
+
+
 def test_ddex_generate_and_validate_round_trip():
     data = {
         "id": "REL001",
