@@ -24,6 +24,7 @@ from ..utils.rule_loader import load_rules
 
 from .report_kit import (
     AMBER,
+    BRAND,
     RED,
     SCHEMES,
     DistroBar,
@@ -134,7 +135,7 @@ def _audit_sections(run_id: str, st: dict, preset: str | None = None) -> list:
     audit_lines = [
         Paragraph("AUDIT TRAIL", st["section"]),
         Spacer(1, 4),
-        Paragraph(f"Session (Run ID): {run_id} · Generated: {now_iso()} · NgineAgent validation/correction pipeline", st["small"]),
+        Paragraph(f"Session (Run ID): {run_id} · Generated: {now_iso()} · {BRAND} validation/correction pipeline", st["small"]),
     ]
     if preset:
         audit_lines.append(Paragraph(

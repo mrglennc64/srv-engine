@@ -16,6 +16,7 @@ from reportlab.lib.styles import ParagraphStyle
 from reportlab.platypus import Flowable, Paragraph, Spacer, Table, TableStyle
 
 from .report_kit import (
+    BRAND,
     CONTENT_W,
     GRIDC,
     INK,
@@ -254,7 +255,7 @@ def build_pitch_pdf() -> bytes:
         "ENGINE REFERENCE · STUDIO METAPHOR", "blue",
         "A Mastering Studio for Data",
         [
-            "NgineAgent runs your catalog through a studio-grade signal chain: load the raw take, "
+            f"{BRAND} runs your catalog through a studio-grade signal chain: load the raw take, "
             "scan it on the console, process it through the correction rack, and bounce a "
             "procurement-ready master — your corrected CSV / XLSX / branded-PDF export.",
             f"5 domain presets · HTTP API · branded PDF artifacts · generated {now_utc()}",
@@ -285,6 +286,13 @@ def build_pitch_pdf() -> bytes:
             "Same four stages, no metaphor: a FastAPI service, per-domain JSON schema + rule "
             "packs, a worksheet-based correction pass, and pandas / openpyxl / reportlab "
             "exporters. No browser, no GPU, no queue, no external calls.",
+            st["small"],
+        ),
+        Spacer(1, 4),
+        Paragraph(
+            "<b>\"Branded PDF\" means:</b> your company name, URL, accent colors and optional logo "
+            "on every artifact's letterhead, footer and accents — configured once in branding.json, "
+            "not hardcoded. Rendering is pure reportlab; there is no headless Chrome to maintain.",
             st["small"],
         ),
     ))
@@ -329,8 +337,20 @@ def build_pitch_pdf() -> bytes:
         ),
         Spacer(1, 5),
         Paragraph(
-            "Score = max(0, 100 − 6·critical − 1·other). Severities come from the preset "
-            "schema per field — never heuristics — so the same data always grades the same.",
+            "<b>Score:</b> start at 100; subtract 6 per Critical finding and 1 per Medium or Low "
+            "finding; floor at 0. Formula: Score = max(0, 100 − (6 × critical) − (1 × medium) − (1 × low)).",
+            st["small"],
+        ),
+        Paragraph(
+            "<b>Worked example:</b> 1 Critical + 2 Medium → 100 − 6 − 1 − 1 = <b>92</b>, but the open "
+            "Critical caps the grade at ACTION REQUIRED. Fix the Critical and re-run: "
+            "100 − 0 − 1 − 1 = <b>98</b> → <b>HEALTHY</b>.",
+            st["small"],
+        ),
+        Paragraph(
+            "Severities come from the preset schema per field — never heuristics — so the same data "
+            "always grades the same. Cross-reference: the inspection preset grades an unknown condition "
+            "value (e.g. \"utmarkt\") HIGH and a malformed date MEDIUM, every run, deterministically.",
             st["small"],
         ),
     ))
@@ -382,6 +402,7 @@ def build_pitch_pdf() -> bytes:
         "Deterministic replay & error model", st,
         panel([
             Paragraph("<b>Replay.</b> Same take + same preset version = identical findings, worksheet and master. Schemas and rule packs are versioned JSON in git; every artifact carries its Run ID, so any past result can be reproduced and audited.", st["small"]),
+            Paragraph("<b>Post-remediation.</b> Fix the flagged rows and re-run the same file: the score recalculates automatically and cleared findings drop from the report. No manual clearing, no state to reset.", st["small"]),
             Paragraph("<b>Malformed upload</b> → HTTP 400 with the parse error — never a crash.", st["small"]),
             Paragraph("<b>Missing required columns</b> → reported as HIGH findings in the run, not an exception.", st["small"]),
             Paragraph("<b>Unknown domain</b> → falls back to the base schema and still validates structure.", st["small"]),
@@ -415,7 +436,8 @@ def build_pitch_pdf() -> bytes:
         "Security & compliance posture", st,
         panel([
             Paragraph("• <b>No external calls</b> during validation, correction or export — the chain runs entirely in-process.", st["small"]),
-            Paragraph("• <b>No customer data retained.</b> Uploads are processed in memory per request; artifacts are returned to the caller, not stored. Telemetry keeps in-memory counters only — no payloads.", st["small"]),
+            Paragraph("• <b>No customer data retained.</b> Uploads are processed in memory per request; artifacts are returned to the caller, not stored.", st["small"]),
+            Paragraph("• <b>Telemetry, precisely:</b> request counts, latency and error rate per endpoint — no row-level data, no PII, held in memory only until process restart. Disable entirely with TELEMETRY_ENABLED=false.", st["small"]),
             Paragraph("• <b>Data residency by construction.</b> The engine runs entirely on your infrastructure; nothing leaves the host. GDPR-friendly: no PII storage means no retention schedule to manage.", st["small"]),
             Paragraph("• <b>Transport & access.</b> TLS via nginx + Let's Encrypt; the console and API sit behind HTTP basic auth; the marketing surface is the only public path.", st["small"]),
             Paragraph("• <b>Auditability.</b> Run ID + preset/schema/rules versions on every artifact — any result can be traced to the exact code and rules that produced it.", st["small"]),

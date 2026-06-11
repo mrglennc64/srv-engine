@@ -27,6 +27,7 @@ from services.generate_worksheet import generate_worksheet
 from services.apply_corrections import apply_corrections
 from services.export_file import export_corrected
 from core.exporters.pdf_exporter import export_validation_pdf
+from core.exporters.report_kit import BRAND
 
 TAKES_DIR = ENGINE_DIR / "demo" / "takes"
 OUT_DIR = ENGINE_DIR / "demo" / "out"
@@ -124,7 +125,7 @@ def run_domain(domain: str) -> dict:
 
 def main():
     domains = sys.argv[1:] or list(FIXES)
-    print(f"NgineAgent demo — full signal chain, artifacts in {OUT_DIR}\n")
+    print(f"{BRAND} demo — full signal chain, artifacts in {OUT_DIR}\n")
     print(f"{'PRESET':<12} {'ROWS':>4}  {'ISSUES':>13}  {'SCORE':>11}")
     for domain in domains:
         if domain not in FIXES:

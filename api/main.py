@@ -1,3 +1,4 @@
+import os
 import time
 from pathlib import Path
 
@@ -14,9 +15,15 @@ from .routes_export import router as export_router
 
 app = FastAPI(title="Generic Validation/Correction Engine", version="0.1.0")
 
+# In-memory request counters/latency only — never payloads. Opt out entirely
+# by running the service with TELEMETRY_ENABLED=false.
+TELEMETRY_ENABLED = os.getenv("TELEMETRY_ENABLED", "true").strip().lower() not in ("0", "false", "no", "off")
+
 
 @app.middleware("http")
 async def record_stats(request: Request, call_next):
+    if not TELEMETRY_ENABLED:
+        return await call_next(request)
     if request.url.path in ("/dashboard", "/stats", "/health", "/openapi.json", "/docs", "/redoc", "/"):
         return await call_next(request)
     start = time.perf_counter()

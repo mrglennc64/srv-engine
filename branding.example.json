@@ -1,0 +1,8 @@
+{
+  "_comment": "Copy to branding.json at the engine root to white-label every PDF artifact and report. All fields optional; defaults are the NgineAgent house style. logo_path is relative to the engine root (PNG with transparency recommended).",
+  "name": "Your Company",
+  "url": "data.yourcompany.com",
+  "accent": "#0fb89c",
+  "accent_dark": "#0b6f5e",
+  "logo_path": "branding/logo.png"
+}
